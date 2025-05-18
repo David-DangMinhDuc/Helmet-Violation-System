@@ -24,8 +24,8 @@ def getCharOnPlate(plateFrameCrop, isAgree):
 if __name__ == '__main__':
     modelPath = "best.pt"
     videoPath = "demo.mp4"
-    nameCls = ['licensePlate', 'motorcycle', 'withHelmet', 'withoutHelmet']
-    boxColor = (0, 0, 255)
+    nameCls = ['number plate', 'rider', 'with helmet', 'without helmet']
+    boxColor = (0, 255, 0)
 
     cap = cv2.VideoCapture(videoPath)
     detectModel = YOLO(modelPath)
@@ -57,7 +57,7 @@ if __name__ == '__main__':
                     if isWithoutHelmet == True and plateBox is not None:
                         x1,y1,x2,y2 = plateBox
                         plateFrameCrop = vidFrame[y1:y2, x1:x2] # crop plate
-                        plateOcrRes = getCharOnPlate(plateFrameCrop, True) # OCR with agreeing to preprocess
+                        plateOcrRes = getCharOnPlate(plateFrameCrop, False) # OCR
         
                         cv2.rectangle(vidFrame, (x1, y1), (x2, y2), boxColor, 2)
                         if plateOcrRes != []:
