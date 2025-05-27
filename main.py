@@ -10,6 +10,56 @@ def preprocessPlate(plateFrameCrop):
     plateThresh = cv2.adaptiveThreshold(blurPlate, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
     return plateThresh
 
+# Check above characters in license plate
+def checkAboveCharsInPlate(plateL):
+    checkL = True
+    
+    if len(plateL) == 2:
+        if len(plateL[0]) != 2 or len(plateL[1]) != 2:
+            checkL = False
+        elif plateL[0].isnumeric() == False:
+            checkL = False
+        elif plateL[1][0].isalpha() == False or plateL[1][1].isnumeric() == False:
+            checkL = False
+    else:
+        for i in range (len(plateL[0])):
+            if i == 2:
+                if plateL[0][i].isalpha() == False:
+                    checkL = False
+            elif plateL[0][i].isnumeric() == False:
+                checkL = False
+    
+    return checkL
+
+# Check under characters in license plate
+def checkUnderCharsInPlate(plateR):
+    checkR = True
+    
+    if len(plateR) == 2:
+        if len(plateR[0]) != 3 or len(plateR[1]) != 2:
+            checkL = False
+        elif plateR[0].isnumeric() == False or plateR[1].isnumeric() == False:
+            checkR = False
+    else:
+        if len(plateR[0]) != 5:
+            checkR = False
+        elif plateR[0].isnumeric() == False:
+            checkR = False
+    
+    return checkR
+
+# Check is correct format plate after recognizing
+def checkCorrectFormAfterOcr(plateOcrRes):
+    if len(plateOcrRes) != 2:
+        return False
+    elif (len(plateOcrRes[0]) < 4 and len(plateOcrRes[0]) > 5) or (len(plateOcrRes[1]) < 5 and len(plateOcrRes[1]) > 6):
+        return False
+    else:
+        plateL = plateOcrRes[0].split("-")
+        plateR = plateOcrRes[1].split(".")
+        checkL, checkR = checkAboveCharsInPlate(plateL), checkUnderCharsInPlate(plateR)
+        return checkL and checkR
+        
 # OCR from preprocessed license plate
 def getCharOnPlate(plateFrameCrop, isAgree):
     plateOcrRes = None
@@ -18,8 +68,18 @@ def getCharOnPlate(plateFrameCrop, isAgree):
         plateOcrRes = easyocr.Reader(['en']).readtext(preprocessedPlate, detail=0)
     else:
         plateOcrRes = easyocr.Reader(['en']).readtext(plateFrameCrop, detail=0)
+
+    # Uppercase characters and remove space on the right of the right string (under characters in plate)
+    for part in plateOcrRes:
+        part = part.upper()
+        part = part.strip()
     
-    return plateOcrRes
+    plateInfoRes = ""
+    if plateOcrRes != [] and checkCorrectFormAfterOcr(plateOcrRes) == True:
+        plateInfo = ' '.join(plateOcrRes)
+        plateInfoRes = plateInfo.upper()
+        
+    return plateInfoRes
 
 if __name__ == '__main__':
     modelPath = "best.pt"
@@ -60,7 +120,7 @@ if __name__ == '__main__':
                         plateOcrRes = getCharOnPlate(plateFrameCrop, False) # OCR
         
                         cv2.rectangle(vidFrame, (x1, y1), (x2, y2), boxColor, 2)
-                        if plateOcrRes != []:
+                        if plateOcrRes != "":
                             cv2.putText(
                                 vidFrame,
                                 f"{' '.join(plateOcrRes)}",
