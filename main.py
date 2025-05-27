@@ -37,7 +37,7 @@ def checkUnderCharsInPlate(plateR):
     
     if len(plateR) == 2:
         if len(plateR[0]) != 3 or len(plateR[1]) != 2:
-            checkL = False
+            checkR = False
         elif plateR[0].isnumeric() == False or plateR[1].isnumeric() == False:
             checkR = False
     else:
